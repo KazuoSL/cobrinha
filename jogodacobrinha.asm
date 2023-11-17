@@ -20,9 +20,15 @@ Main:
 	
 	loadn r0, #699			
  	loadn r2, #corpoMinhoca
-	store posMinhoca, r0		; Zera Posicao Atual da minhoca
-	store posCaudaMinhoca, r0	    ; Zera Posicao Anterior da minhoca
  	storei r2, r0
+	dec r0
+	store posMinhoca, r0		; Zera Posicao Atual da minhoca
+	
+	loadn r0, #'w'
+	store guardaTeclado, r0
+	
+	;store posCaudaMinhoca, r0	    ; Zera Posicao Anterior da minhoca
+	
  	
  	 
  	loadn r0, #0    	
@@ -36,65 +42,43 @@ Main:
 		loadn r1, #10
 		mod r1, r0, r1
 		cmp r1, r2		; if (mod(c/10)==0
-		ceq MoveMinhoca
+		call MoveMinhoca
+ 		call Desenha_Minhoca
+		
 		call Delay
 		inc r0
 		jmp Loop
  
-MoveMinhoca: 
- 	push r0
- 	push r1
- 		
- 	call MoveMinhoca_recalculaPos
- 	
- 	load r0, posMinhoca
- 	load r1, posCaudaMinhoca
- 	load r3, posComida
-	
- 	;cmp r0, r1
- 	;jeq MoveMinhoca_Skip
- 		;call MoveMinhoca_Apaga
- 		;call MoveMinhoca_Desenha
- 	call Desenha_Minhoca
- 	cmp r0, r3
-	ceq Incrementa_Minhoca 		
- 		
- 	MoveMinhoca_Skip:
- 		pop r1
- 		pop r0
- 		rts
- 		
  		
 Incrementa_Minhoca:
-	;pop r0
+	push r0
 	;pop r1
 	;pop r2
 	;pop r3
 	
 	call Imprime_Comida
 	
-	loadn r1, #'O'
 	load r0, posCaudaMinhoca
-	;outchar r1, r0
-	
-	loadn r1, #corpoMinhoca
 	load r2, tamanho
+
+	loadn r1, #corpoMinhoca
+	inc r2
 	
 	add r1, r1, r2
 	storei r1, r0
 	
-	inc r2
 	store tamanho, r2
+	;call Desenha_Minhoca
 	
 	
 	
-	
-		;	storei r0, r2
+	;storei r0, r2
 	;outchar r1, r0
 	;push r3
 	;push r2
 	;push r1
-	;push r0
+	pop r0
+	jmp MoveMinhoca_Skip
 	;rts
 
 Desenha_Minhoca:
@@ -107,8 +91,9 @@ Desenha_Minhoca:
 	;outchar r1, r6
 	
 	
-    loadn r1, #'O'         ; Caractere para representar a cobra na tela
+    loadn r1, #'G'         ; Caractere para representar a cobra na tela
     loadn r5, #' '
+    
     
     load r0, posMinhoca    ; Posição atual da cabeça da cobra
     
@@ -122,7 +107,7 @@ Desenha_Minhoca:
 		
 		outchar r1, r0
 	    outchar r5, r3        ; Desenha o caractere do corpo da cobra
-
+	    loadn r1, #'0'         
       	storei r2, r0
       	
       	mov r0, r3
@@ -136,38 +121,63 @@ Desenha_Minhoca:
     
     Desenha_Minhoca_Fim:
 	    store posCaudaMinhoca,r3
-	    outchar r5,r3
+	    ;loadn r1, #'L'
+	    ;outchar r1,r3 
 	    pop r3
 	    pop r2
 	    pop r1
 	    pop r0
 	    rts
+	    
+verificaColisao:
+	load r0, posMinhoca
+	loadn r1, #corpoMinhoca
+	loadn r2, #0
+	load r4, tamanho 
+;	inc r4
+	;add r1,r1, r2
 	
-MoveMinhoca_Apaga:
+	
+	verificaColisaoLoop:
+	
+		cmp r2, r4
+		jeq verificaColisaoFim
+		loadi r3,r1	
+		
+		
+		cmp r0, r3
+		jeq jogoFinalizado
+		
+		
+		inc r2
+		inc r1
+		jmp verificaColisaoLoop
+		
+	verificaColisaoFim:
+		rts
+	
+MoveMinhoca: 
  	push r0
  	push r1
- 	push r2
- 	push r3
- 	push r4
- 	push r5
- 	loadn r1, #' '
- 	load r0, posCaudaMinhoca
- 	outchar r1, r0
- 	;loadn 
- 	;loadn r1, #tela0Linha0
- 	;add r2, r1, r0
- 	;loadn r4, #40
- 	;div r3, r0, r4
- 	;add r2, r2, r3
- 	;loadi r5, r2
+ 		
+ 	call MoveMinhoca_recalculaPos
  	
- 	pop r5
- 	pop r4
- 	pop r3
- 	pop r2
- 	pop r1
- 	pop r0
- 	rts
+ 	;loadn r0, #corpoMinhoca
+ 	;loadi r0, r0
+ 	load r0, posMinhoca
+ 	load r1, posCaudaMinhoca
+ 	load r3, posComida
+ 	
+ 	cmp r0, r3
+	jeq Incrementa_Minhoca 		
+	
+	call verificaColisao
+ 		
+ 	MoveMinhoca_Skip:
+ 		pop r1
+ 		pop r0
+ 		rts
+ 		
  	
 MoveMinhoca_recalculaPos:
  	push r0 
@@ -188,7 +198,7 @@ MoveMinhoca_recalculaPos:
  	
  	loadn r2, #'w'
  	cmp r1, r2
- 	jeq MoveMinhoca_recalculaPos_W
+ 	jeq MoveMinhoca_recalculaPos_W;
  	
  	loadn r2, #'s'
  	cmp r1, r2
@@ -247,9 +257,10 @@ MoveMinhoca_recalculaPos:
  		jmp MoveMinhoca_recalculaPos_Fim
  		
  	MoveMinhoca_recalculaPos_W:
- 		loadn r1, #40
+ 		loadn r1, #120
  		cmp r0, r1
- 		jeq MoveMinhoca_recalculaPos_Fim
+ 		jle MoveMinhoca_recalculaPos_Fim
+ 		loadn r1, #40
  		sub r0, r0, r1
  		loadn r3, #'w'
  		store guardaTeclado, r3
@@ -264,19 +275,8 @@ MoveMinhoca_recalculaPos:
  		loadn r3, #'s'
  		store guardaTeclado, r3
  		jmp MoveMinhoca_recalculaPos_Fim
- 		
- 	MoveMinhoca_Desenha: 
- 		push r0
- 		push r1
- 		
- 		loadn r1, #'O'
- 		load r0, posMinhoca
- 		outchar r1, r0
- 		;store posCaudaMinhoca, r0
- 		
- 		pop r1
- 		pop r0
- 		rts
+
+
  
 ApagaTela:
 	push r0
@@ -317,10 +317,6 @@ ImprimeTela: 	;  rotina de Impresao de Cenario na Tela Inteira
 		cmp r0, r5			; Compara r0 com 1200
 		jne ImprimeTela_Loop	; Enquanto r0 < 1200
 	
-;	store iComida, #0
-	loadn r6,#432	
-	loadn r5,#'@' ; Caracter da comida
-	outchar r6, r5
 	pop r5	; resgata os valores dos registradores utilizados na Subrotina da Pilha
 	pop r4
 	pop r3
@@ -380,13 +376,16 @@ Imprime_Comida:
 	pop r0
 	rts
 
+jogoFinalizado:
+	call ApagaTela
+	jmp Main
 
 Delay:
 						;Utiliza Push e Pop para nao afetar os ristradores do programa principal
 	push r0
 	push r1
 	
-	loadn r1, #50  ; a
+	loadn r1, #100  ; a
    Delay_volta2:				;Quebrou o contador acima em duas partes (dois loops de decremento)
 	loadn r0, #3000	; b
    Delay_volta: 
@@ -400,36 +399,36 @@ Delay:
 	
 	rts	
 	
-tela0Linha0  : string "                           SCOrE:       "
+tela0Linha0  : string "                           SCORE:       "
 tela0Linha1  : string "________________________________________"
-tela0Linha2  : string "                                        "
-tela0Linha3  : string "                                        "
-tela0Linha4  : string "                                        "
-tela0Linha5  : string "                                        "
-tela0Linha6  : string "                                        "
-tela0Linha7  : string "                                        "
-tela0Linha8  : string "                                        "
-tela0Linha9  : string "                                        "
-tela0Linha10 : string "                                        "
-tela0Linha11 : string "                                        "
-tela0Linha12 : string "                                        "
-tela0Linha13 : string "                                        "
-tela0Linha14 : string "                                        "
-tela0Linha15 : string "                                        "
-tela0Linha16 : string "                                        "
-tela0Linha17 : string "                                        "
-tela0Linha18 : string "                                        "
-tela0Linha19 : string "                                        "
-tela0Linha20 : string "                                        "
-tela0Linha21 : string "                                        "
-tela0Linha22 : string "                                        "
-tela0Linha23 : string "                                        "
-tela0Linha24 : string "                                        "
-tela0Linha25 : string "                                        "
-tela0Linha26 : string "                                        "
-tela0Linha27 : string "                                        "
-tela0Linha28 : string "                                        "
-tela0Linha29 : string "                                        "
+tela0Linha2  : string "****************************************"
+tela0Linha3  : string "*                                      *"
+tela0Linha4  : string "*                                      *"
+tela0Linha5  : string "*                                      *"
+tela0Linha6  : string "*                                      *"
+tela0Linha7  : string "*                                      *"
+tela0Linha8  : string "*                                      *"
+tela0Linha9  : string "*                                      *"
+tela0Linha10 : string "*                                      *"
+tela0Linha11 : string "*                                      *"
+tela0Linha12 : string "*                                      *"
+tela0Linha13 : string "*                                      *"
+tela0Linha14 : string "*                                      *"
+tela0Linha15 : string "*                                      *"
+tela0Linha16 : string "*                                      *"
+tela0Linha17 : string "*                                      *"
+tela0Linha18 : string "*                                      *"
+tela0Linha19 : string "*                                      *"
+tela0Linha20 : string "*                                      *"
+tela0Linha21 : string "*                                      *"
+tela0Linha22 : string "*                                      *"
+tela0Linha23 : string "*                                      *"
+tela0Linha24 : string "*                                      *"
+tela0Linha25 : string "*                                      *"
+tela0Linha26 : string "*                                      *"
+tela0Linha27 : string "*                                      *"
+tela0Linha28 : string "*                                      *"
+tela0Linha29 : string "****************************************"
 
 comida : var #1200
 static comida + #0, #258
