@@ -13,6 +13,35 @@ corpoMinhoca: var #300
 score: var #1000
 
 Main:
+
+	TelaMenu:
+	call ApagaTela
+ 	loadn r1, #tela1Linha0	    ; Endereco onde comeca a primeira linha do cenario
+	loadn r2, #1536  			; cor branca
+	call ImprimeTela
+	
+	TelaMenu_loop:
+	loadn r3, #13
+	inchar r4
+	cmp r4, r3
+	jeq InicioJogo
+	jmp TelaMenu_loop
+	
+	TelaMorte:
+	call ApagaTela
+ 	loadn r1, #tela2Linha0	    ; Endereco onde comeca a primeira linha do cenario
+	loadn r2, #1536  			; cor branca
+	call ImprimeTela
+	
+	TelaMorte_loop:
+	loadn r3, #13
+	inchar r4
+	cmp r4, r3
+	jeq InicioJogo
+	jmp TelaMorte_loop
+	
+	InicioJogo:
+
  	call ApagaTela
  	loadn r1, #tela0Linha0	    ; Endereco onde comeca a primeira linha do cenario
 	loadn r2, #1536  			; cor branca
@@ -28,8 +57,6 @@ Main:
 	store guardaTeclado, r0
 	
 	;store posCaudaMinhoca, r0	    ; Zera Posicao Anterior da minhoca
-	
- 	
  	 
  	loadn r0, #0    	
  	store tamanho, r0
@@ -48,7 +75,6 @@ Main:
 		call Delay
 		inc r0
 		jmp Loop
- 
  		
 Incrementa_Minhoca:
 	push r0
@@ -146,7 +172,7 @@ verificaColisao:
 		
 		
 		cmp r0, r3
-		jeq jogoFinalizado
+		jeq TelaMorte
 		
 		
 		inc r2
@@ -376,16 +402,12 @@ Imprime_Comida:
 	pop r0
 	rts
 
-jogoFinalizado:
-	call ApagaTela
-	jmp Main
-
 Delay:
 						;Utiliza Push e Pop para nao afetar os ristradores do programa principal
 	push r0
 	push r1
 	
-	loadn r1, #100  ; a
+	loadn r1, #200  ; a
    Delay_volta2:				;Quebrou o contador acima em duas partes (dois loops de decremento)
 	loadn r0, #3000	; b
    Delay_volta: 
@@ -429,6 +451,68 @@ tela0Linha26 : string "*                                      *"
 tela0Linha27 : string "*                                      *"
 tela0Linha28 : string "*                                      *"
 tela0Linha29 : string "****************************************"
+
+tela1Linha0  : string "                           SCORE:       "
+tela1Linha1  : string "________________________________________"
+tela1Linha2  : string "****************************************"
+tela1Linha3  : string "*                                      *"
+tela1Linha4  : string "*                                      *"
+tela1Linha5  : string "*                                      *"
+tela1Linha6  : string "*                                      *"
+tela1Linha7  : string "*                                      *"
+tela1Linha8  : string "*                                      *"
+tela1Linha9  : string "*            JOGO DA COBRINHA          *"
+tela1Linha10 : string "*                                      *"
+tela1Linha11 : string "*                                      *"
+tela1Linha12 : string "*       DIGITE ENTER PARA COMECAR      *"
+tela1Linha13 : string "*                                      *"
+tela1Linha14 : string "*                                      *"
+tela1Linha15 : string "*                                      *"
+tela1Linha16 : string "*                                      *"
+tela1Linha17 : string "*                                      *"
+tela1Linha18 : string "*                                      *"
+tela1Linha19 : string "*                                      *"
+tela1Linha20 : string "*                                      *"
+tela1Linha21 : string "*                                      *"
+tela1Linha22 : string "*                                      *"
+tela1Linha23 : string "*                                      *"
+tela1Linha24 : string "*                                      *"
+tela1Linha25 : string "*                                      *"
+tela1Linha26 : string "*                                      *"
+tela1Linha27 : string "*                                      *"
+tela1Linha28 : string "*                                      *"
+tela1Linha29 : string "****************************************"
+
+tela2Linha0  : string "                           SCORE:       "
+tela2Linha1  : string "________________________________________"
+tela2Linha2  : string "****************************************"
+tela2Linha3  : string "*                                      *"
+tela2Linha4  : string "*                                      *"
+tela2Linha5  : string "*                                      *"
+tela2Linha6  : string "*                                      *"
+tela2Linha7  : string "*                                      *"
+tela2Linha8  : string "*                                      *"
+tela2Linha9  : string "*                GAME OVER             *"
+tela2Linha10 : string "*                                      *"
+tela2Linha11 : string "*               SCORE:                 *"
+tela2Linha12 : string "*       DIGITE ENTER PARA COMECAR      *"
+tela2Linha13 : string "*                                      *"
+tela2Linha14 : string "*                                      *"
+tela2Linha15 : string "*                                      *"
+tela2Linha16 : string "*                                      *"
+tela2Linha17 : string "*                                      *"
+tela2Linha18 : string "*                                      *"
+tela2Linha19 : string "*                                      *"
+tela2Linha20 : string "*                                      *"
+tela2Linha21 : string "*                                      *"
+tela2Linha22 : string "*                                      *"
+tela2Linha23 : string "*                                      *"
+tela2Linha24 : string "*                                      *"
+tela2Linha25 : string "*                                      *"
+tela2Linha26 : string "*                                      *"
+tela2Linha27 : string "*                                      *"
+tela2Linha28 : string "*                                      *"
+tela2Linha29 : string "****************************************"
 
 comida : var #1200
 static comida + #0, #258
