@@ -10,8 +10,6 @@ tamanho: var #1
 
 corpoMinhoca: var #300
 
-score: var #1000
-
 Main:
 
 	TelaMenu:
@@ -32,6 +30,8 @@ Main:
  	loadn r1, #tela2Linha0	    ; Endereco onde comeca a primeira linha do cenario
 	loadn r2, #1536  			; cor branca
 	call ImprimeTela
+	loadn r0, #236
+	call MostraScore
 	
 	TelaMorte_loop:
 	loadn r3, #13
@@ -47,6 +47,8 @@ Main:
 	loadn r2, #1536  			; cor branca
 	call ImprimeTela
 	
+	loadn r0, #36
+	call MostraScore
 	loadn r0, #699			
  	loadn r2, #corpoMinhoca
  	storei r2, r0
@@ -60,7 +62,6 @@ Main:
  	 
  	loadn r0, #0    	
  	store tamanho, r0
- 	store score, r0
  	
 	call Imprime_Comida
  	
@@ -94,7 +95,8 @@ Incrementa_Minhoca:
 	storei r1, r0
 	
 	store tamanho, r2
-	;call Desenha_Minhoca
+	loadn r0, #36
+	call MostraScore
 	
 	
 	
@@ -155,6 +157,46 @@ Desenha_Minhoca:
 	    pop r0
 	    rts
 	    
+	    
+MostraScore:
+    ;push r0
+    push r1
+    push r2
+    push r3
+
+
+    loadn r4, #'0'
+    ;loadn r1, #1563
+    ;add r4, r4, r1
+
+    load r1, tamanho
+    loadn r2, #10
+    mod r3, r1, r2
+    div r1, r1, r2
+    add r3, r4, r3
+    outchar r3, r0
+
+    ; Continua a conversão enquanto o valor não for zero
+    MostraScore_Loop:
+    	loadn r3, #0
+    	cmp r1, r3
+    	jeq MostraScore_Fim
+        dec r0
+        mod r3, r1, r2
+	    div r1, r1, r2
+	    add r3, r4, r3
+	    outchar r3, r0
+;
+        jmp MostraScore_Loop
+        
+    MostraScore_Fim:
+	    pop r3
+	    pop r2
+	    pop r1
+	    ;pop r0
+	    rts
+
+
 verificaColisao:
 	load r0, posMinhoca
 	loadn r1, #corpoMinhoca
@@ -304,8 +346,6 @@ MoveMinhoca_recalculaPos:
  		loadn r3, #'s'
  		store guardaTeclado, r3
  		jmp MoveMinhoca_recalculaPos_Fim
-
-
  
 ApagaTela:
 	push r0
