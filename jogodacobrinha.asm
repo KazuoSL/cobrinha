@@ -1,4 +1,12 @@
-; JOGO DA COBrINHA
+; Disciplina: SCC0902-Organização e arquitetura de computadores
+; 
+; Gabriel Garcia Ferreira - 13677160
+; Johnatas Luiz dos Santos - 13676388
+; Lucas Kazuo Ito de Araujo - 9790986
+;
+; --------------------- JOGO DA COBRINHA -------------------------------
+;
+
 jmp Main
 
 posMinhoca: var #1			   ; Contem a posicao atual da minhoca
