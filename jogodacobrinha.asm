@@ -1,469 +1,509 @@
 ; JOGO DA COBrINHA
 jmp Main
 
-posMinhoca: var #1			; Contem a posicao atual da Nave
-posCaudaMinhoca: var #1		; Contem a posicao anterior da Nave
-iComida: var #1
-posComida: var #1
-guardaTeclado: var #1
-tamanho: var #1
-
-corpoMinhoca: var #300
+posMinhoca: var #1			   ; Contem a posicao atual da minhoca
+posCaudaMinhoca: var #1		   ; Contem a posicao anterior da minhoca
+iComida: var #1				   ; Contem o incremento do vetor de posições da comida
+posComida: var #1			   ; Contem a posição da comida
+guardaTeclado: var #1          ; Guarda a ultima tecla AWSD, para manter o movimento
+tamanho: var #1                ; Armazena o tamanho da cobrinha
+corpoMinhoca: var #300         ; Armazena a posição do corpo da cobrinha
 
 Main:
-
+	; Inicio com a tela de menu, apagando a tela e imprimindo a tela
 	TelaMenu:
-	call ApagaTela
- 	loadn r1, #tela1Linha0	    ; Endereco onde comeca a primeira linha do cenario
-	loadn r2, #1536  			; cor branca
-	call ImprimeTela
+	call ApagaTela            ; Chama a função ApagaTela
+ 	loadn r1, #tela1Linha0	  ; Carrega o endereço onde comeca a primeira linha do cenario do menu
+	loadn r2, #1536  	      ; Cor azul
+	call ImprimeTela          ; Imprime o cenario do menu com a cor azul
 	
-	TelaMenu_loop:
-	loadn r3, #13
-	inchar r4
-	cmp r4, r3
-	jeq InicioJogo
+	; Função que espera o Enter para o início do jogo
+	TelaMenu_loop:            
+	loadn r3, #13             ; Carrega o 13, número ascii do enter
+	inchar r4                 ; Recebe dado do teclado
+	cmp r4, r3                ; Compara se foi teclado enter
+	jeq InicioJogo            ; Se sim, começa o jogo
 	jmp TelaMenu_loop
 	
+	; Função que volta ao menu na tela de morte. A diferença é que mostra o score da rodada
 	TelaMorte:
-	call ApagaTela
- 	loadn r1, #tela2Linha0	    ; Endereco onde comeca a primeira linha do cenario
-	loadn r2, #1536  			; cor branca
-	call ImprimeTela
-	loadn r0, #236
-	call MostraScore
+	call ApagaTela            ; Apaga tela
+ 	loadn r1, #tela2Linha0	  ; Endereco onde comeca a primeira linha do cenario do menu de morte
+	loadn r2, #1536  	      ; cor azul
+	call ImprimeTela          ; Imprime a tela do menu de morte na cor azul
+	loadn r0, #464            ; Imprime o score na posição 464
+	call MostraScore          
 	
+	; Aguarda a tecla enter para reinício do jogo
 	TelaMorte_loop:
-	loadn r3, #13
-	inchar r4
-	cmp r4, r3
-	jeq InicioJogo
+	loadn r3, #13             ; Carrega o 13, número ascii do enter
+	inchar r4                 ; Recebe dado do teclado
+	cmp r4, r3                ; Compara se foi teclado enter
+	jeq InicioJogo            ; Se sim, recomeça o jogo
 	jmp TelaMorte_loop
 	
-	InicioJogo:
-
- 	call ApagaTela
- 	loadn r1, #tela0Linha0	    ; Endereco onde comeca a primeira linha do cenario
-	loadn r2, #1536  			; cor branca
-	call ImprimeTela
 	
-	loadn r0, #36
-	call MostraScore
-	loadn r0, #699			
- 	loadn r2, #corpoMinhoca
- 	storei r2, r0
-	dec r0
-	store posMinhoca, r0		; Zera Posicao Atual da minhoca
+	; Rotina para inicialização do jogo
+	; Apaga a tela e imprime o cenario do jogo
+	; Zera o tamanho da minhoca
+	; Imprime a cobrinha na posição inicial andando pra cima
+	; Imprime a primeira comida e começa o loop
+	InicioJogo:               
+ 	call ApagaTela            ; Limpa a tela
+ 	loadn r1, #tela0Linha0	  ; Endereco onde comeca a primeira linha do cenario do jogo
+	loadn r2, #1536  	      ; Cor azul
+	call ImprimeTela          ; Imprime o cenario na cor azul
+	loadn r5, #0              ; Zera o tamanho
+	store tamanho, r5
+	loadn r0, #36             ; Posição onde será mostrada o score no meio do jogo
+	call MostraScore          ; Printa o score na tela
+	loadn r0, #700			  ; Posição inicial da cobrinha
+ 	store posMinhoca, r0      ; Armazena a posição na variavel
+	dec r0                    
+	store corpoMinhoca, r0	  ; Posicao inicial da minhoca
 	
-	loadn r0, #'w'
-	store guardaTeclado, r0
-	
-	;store posCaudaMinhoca, r0	    ; Zera Posicao Anterior da minhoca
- 	 
- 	loadn r0, #0    	
- 	store tamanho, r0
+	loadn r0, #'w'            ; Configura para a cobra começar a andar para cima
+	store guardaTeclado, r0   ; E armazena no guardaTeclado para manter o movimento a cada ciclo
  	
-	call Imprime_Comida
+	call Imprime_Comida       ; Chama a função Imprime_Comida para aparecer a´primeira comida do jogo
  	
+ 	; O loop do jogo é basciamente o movimento da cobrinha, printar a cobrinha e o delay
+ 	; Como o jogo é composto só pelo movimento da cobrinha, não é necessario utilizar o mod
  	Loop:
-	
-		loadn r1, #10
-		mod r1, r0, r1
-		cmp r1, r2		; if (mod(c/10)==0
-		call MoveMinhoca
- 		call Desenha_Minhoca
-		
-		call Delay
-		inc r0
-		jmp Loop
- 		
-Incrementa_Minhoca:
-	push r0
-	;pop r1
-	;pop r2
-	;pop r3
-	
-	call Imprime_Comida
-	
-	load r0, posCaudaMinhoca
-	load r2, tamanho
+		call MoveMinhoca      ; Chama a função responsável pelo movimento da minhoca
+ 		call Desenha_Minhoca  ; Chama a função responsável por printar a cobra
+		call Delay            ; Chama a função responsável pelo delay
+		jmp Loop              ; Recomeça o loop
 
-	loadn r1, #corpoMinhoca
-	inc r2
-	
-	add r1, r1, r2
-	storei r1, r0
-	
-	store tamanho, r2
-	loadn r0, #36
-	call MostraScore
-	
-	
-	
-	;storei r0, r2
-	;outchar r1, r0
-	;push r3
-	;push r2
-	;push r1
-	pop r0
-	jmp MoveMinhoca_Skip
-	;rts
-
+; A função Desenha_Minhoca pega a posição da minhoca e printa na tela, depois faz um loop do corpo de acordo com o tamanho
 Desenha_Minhoca:
-    push r0
+    push r0                   ; Preserva os valores dos registradores
     push r1
     push r2
     push r3
-    
-	;loadn r1, #'T'
-	;outchar r1, r6
+    push r4
+    push r5
+    push r6
 	
+    loadn r1, #'G'            ; Usamos o caractere G para representar a cobrinha
+    loadn r5, #' '            ; Também carregamos o ' ' para apagar o corpo
+    
+    load r0, posMinhoca       ; Carregamos a posição da minhoca em R0
+    loadn r2, #corpoMinhoca   ; Carrega endereço da primeira posição do corpo da minhoca
+	loadn r4, #0              ; Carrega com 0 e tamanho para fazer o loop do corpo da minhoca
+	load r6, tamanho          
 	
-    loadn r1, #'G'         ; Caractere para representar a cobra na tela
-    loadn r5, #' '
-    
-    
-    load r0, posMinhoca    ; Posição atual da cabeça da cobra
-    
-    loadn r2, #corpoMinhoca    ; Tamanho do corpo da cobra
-    	
-	loadn r4, #0
-	load r6, tamanho
-	
-    Desenha_Minhoca_Loop:
-		loadi r3, r2
-		
-		outchar r1, r0
-	    outchar r5, r3        ; Desenha o caractere do corpo da cobra
-	    loadn r1, #'0'         
-      	storei r2, r0
-      	
-      	mov r0, r3
-    	
-        cmp r4, r6               ; Decrementa o contador do corpo
-        jeq Desenha_Minhoca_Fim ; Se o corpo acabou, sai do loop
-        
+	; No loop do Desenha_Minhoca_Loop, printamos a cobra para cada posição do corpo
+	; Para explicação, definimos uma posição 1 e posição 2
+    Desenha_Minhoca_Loop:    	
+		loadi r3, r2          ; Primeiro, carregamos a posição 2 a primeira posição do corpo da minhoca (que seria a posição anterior da posição 1)
+		outchar r1, r0        ; Imprime a posição 1
+	    outchar r5, r3        ; Apaga a posição 2
+	    ; No primeiro loop, printamos com um caractere 'G' e depois do segundo loop, printamos com caractere '0'
+	    ; Nota-se também que a cada loop, imprimimos a posição 1 e apagamos a posição 2, dando movimento 
+	    loadn r1, #'0'        ; Definimos o corpo com o caractere '0' depois do primeiro loop
+      	storei r2, r0         ; Armazenamos então a posição 1 no vetor CorpoMinhoca
+      	mov r0, r3            ; Agora a posição 2 passa para o próximo loop
+        cmp r4, r6            ; Faz a comparação se foi imprimido todos os segmentos da cobrinha, de acordo com a variável tamanho
+        ; Se foi imprimido todos, finaliza a rotina
+        jeq Desenha_Minhoca_Fim
+        ; Caso contrário, vai para a próxima posição do corpo e incrementa o R4 para fazer a comparação com o tamanho da cobra no próximo loop
         inc r4
-        inc r2; Move para a próxima posição do corpo
+        inc r2
         jmp Desenha_Minhoca_Loop
-    
+    ; No fim, armazena a posição da cauda e faz o pop para os registradores
     Desenha_Minhoca_Fim:
 	    store posCaudaMinhoca,r3
-	    ;loadn r1, #'L'
-	    ;outchar r1,r3 
+	    pop r6
+	    pop r5
+	    pop r4
+	    pop r3
+	    pop r2
+	    pop r1
+	    pop r0
+	    rts   
+
+; Função para ficar atualizando o score do jogo no canto direito superior da tela	    
+MostraScore:
+    push r0                   ; Preservamos os valores dos registradores na pilha
+    push r1
+    push r2
+    push r3
+    push r4
+
+    loadn r4, #'0'            ; Definimos R4 como 0     
+    load r1, tamanho          ; Carregamos o tamanho da cobrinha em R1
+    loadn r2, #10             ; Carregamos 10 em R2
+    mod r3, r1, r2            ; R3 recebe a sobra da divisão entre R1 e R2 (no caso, as unidades)
+    div r1, r1, r2            ; R1 recebe a divisão de R1 e R2 (no caso, as dezenas)
+    add r3, r4, r3            ; Somamos a sobra da divisão (unidades) por 0
+    outchar r3, r0            ; Imprimimos o valor
+
+    ; Continua a conversão enquanto o valor não for zero
+    MostraScore_Loop:
+    	loadn r3, #0
+    	cmp r1, r3            
+    	; Compara o resultado da divisão por 10, se for 0 (<10), para de imprimir
+    	; Se for diferente de 0 (<10), imprime o valor das dezenas, e continua para centenas
+    	jeq MostraScore_Fim
+        dec r0
+        mod r3, r1, r2       ; Resto da divisão por 10
+	    div r1, r1, r2       ; Resultado da divisão por 10
+	    add r3, r4, r3       ; Soma com 0
+	    outchar r3, r0       ; Imprime o valor
+;		Retorno ao loop
+        jmp MostraScore_Loop
+   	; Quando finaliza de imprimir, restaura os valores dos registradores
+    MostraScore_Fim:
+    	pop r4
 	    pop r3
 	    pop r2
 	    pop r1
 	    pop r0
 	    rts
-	    
-	    
-MostraScore:
-    ;push r0
-    push r1
-    push r2
-    push r3
 
-
-    loadn r4, #'0'
-    ;loadn r1, #1563
-    ;add r4, r4, r1
-
-    load r1, tamanho
-    loadn r2, #10
-    mod r3, r1, r2
-    div r1, r1, r2
-    add r3, r4, r3
-    outchar r3, r0
-
-    ; Continua a conversão enquanto o valor não for zero
-    MostraScore_Loop:
-    	loadn r3, #0
-    	cmp r1, r3
-    	jeq MostraScore_Fim
-        dec r0
-        mod r3, r1, r2
-	    div r1, r1, r2
-	    add r3, r4, r3
-	    outchar r3, r0
-;
-        jmp MostraScore_Loop
-        
-    MostraScore_Fim:
-	    pop r3
-	    pop r2
-	    pop r1
-	    ;pop r0
-	    rts
-
-
+; Função que verifica a colisão da cobrinha com o próprio corpo
 verificaColisao:
-	load r0, posMinhoca
-	loadn r1, #corpoMinhoca
-	loadn r2, #0
-	load r4, tamanho 
-	loadn r5, #'*' 
-;	inc r4
-	;add r1,r1, r2
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
 	
-	;cmp r0, r5
-	;jeq TelaMorte
-	
+	load r0, posMinhoca      ; Carrega a posição da minhoca em R0
+	loadn r1, #corpoMinhoca  ; Carrega o vetor de endereço dos corpos
+	loadn r2, #0             ; Carrega o 0 em R2
+	load r4, tamanho         ; Carrega o tamanho da cobra em R4
+	loadn r5, #'*'           ; Carrega o * em R5 (paredes)
+	; Temos o loop de verificação da colisão
 	verificaColisaoLoop:
-	
-		cmp r2, r4
+		cmp r2, r4           ; For i de 0 ao tamanho da cobra
 		jeq verificaColisaoFim
-		loadi r3,r1	
-		
-		
-		cmp r0, r3
+		loadi r3,r1	         ; Carrega a posição de cada pedaço do corpo da cobra
+		cmp r0, r3			 ; Compara a posição da cabeça com o pedaço do corpo da minhoca
+		; Se for igual, morreu
+		; Se for diferente, passa para o próximo pedaço da sobra
 		jeq TelaMorte
-		
-		
-		inc r2
-		inc r1
+		inc r2               ; Incrementa i no for
+		inc r1               ; Passa para o próxima posição do pedaço do corpo da cobra
 		jmp verificaColisaoLoop
-		
 	verificaColisaoFim:
+		; Restaura os valores nos registradores
+		pop r5
+		pop r4
+		pop r3
+		pop r2
+		pop r1
+		pop r0
 		rts
-	
-MoveMinhoca: 
- 	push r0
- 	push r1
- 		
+
+; Função de movimentação da cobrinha
+MoveMinhoca:
+ 	push r0          	 	 ; Preserva os valores dos registradores na pilha
+ 	push r1   
+ 	push r2
+ 	; Chama a função responsável por calcular a próxima posição da minhoca
  	call MoveMinhoca_recalculaPos
- 	
- 	;loadn r0, #corpoMinhoca
- 	;loadi r0, r0
- 	load r0, posMinhoca
- 	load r1, posCaudaMinhoca
- 	load r3, posComida
- 	
- 	cmp r0, r3
+ 	; Após movimentar, verifica se a cobra comeu a frutinha
+ 	load r0, posMinhoca 	 ; Carrega a posição da minhoca
+ 	load r2, posComida       ; Carrega a posição da frutinha
+ 	; Se for igual (comeu), chama a função de aumentar a cobra
+ 	cmp r0, r2
 	jeq Incrementa_Minhoca 		
-	
+	; Chama a função de verificar se a cobra sofreu colisão 
 	call verificaColisao
- 		
  	MoveMinhoca_Skip:
+ 		pop r2  			 ; Restaura os valores dos registradores
  		pop r1
  		pop r0
  		rts
  		
- 	
+; Função que recalcula a nova posição da cobrinha
 MoveMinhoca_recalculaPos:
- 	push r0 
+ 	push r0  				 ; Preserva os valores dos registradores na pilha
  	push r1
  	push r2
  	push r3
+ 	push r4
+ 	push r5
  	
- 	load r0, posMinhoca
+ 	load r0, posMinhoca      ; Carrega a posição atual da cobrinha
  	
- 	inchar r1
- 	loadn r2, #'a'
+ 	inchar r1 				 ; Recebe a tecla teclada
+ 	loadn r2, #'a'           ; Verifica se a tecla teclada foi 'a'
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_A
- 	
- 	loadn r2, #'d'
+ 	loadn r2, #'d'			 ; Verifica se a tecla teclada foi 'd'
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_D
- 	
- 	loadn r2, #'w'
+ 	loadn r2, #'w'			 ; Verifica se a tecla teclada foi 'w'
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_W;
- 	
- 	loadn r2, #'s'
+ 	loadn r2, #'s'			 ; Verifica se a tecla teclada foi 's'
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_S
  	
- 	
+ 	; Porém, se não foi teclado nada, a cobrinha deve manter o movimento para a mesma direção
+ 	; Assim, usamos o guardaTeclado para armazenar a direção da cobrinha
  	loadn r2, #'a'
- 	load r1, guardaTeclado
+ 	load r1, guardaTeclado   ; Se a cobra está andando para esquerda
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_A
- 	
  	loadn r2, #'d'
- 	load r1, guardaTeclado
+ 	load r1, guardaTeclado   ; Se a cobra está andando para direita
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_D
- 	
  	loadn r2, #'w'
- 	load r1, guardaTeclado
+ 	load r1, guardaTeclado   ; Se a cobra está andando para cima
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_W
- 	
  	loadn r2, #'s'
- 	load r1, guardaTeclado
+ 	load r1, guardaTeclado   ; Se a cobna está andando para baixo
  	cmp r1, r2
  	jeq MoveMinhoca_recalculaPos_S
- 	
- 	
+ 	; Fim da função
  	MoveMinhoca_recalculaPos_Fim:
- 		store posMinhoca, r0
+ 		store posMinhoca, r0 ; Armazena a posição da minhoca
+ 		pop r5 				 ; Restaura os valores armazenados nos registradores
+ 		pop r4
  		pop r3
  		pop r2
  		pop r1
  		pop r0
  		rts
- 		
+ 	
+ 	; Tratamento para movimentar para esquerda
  	MoveMinhoca_recalculaPos_A:
- 		loadn r1, #40
+ 		loadn r1, #40        
  		loadn r2, #1
- 		mod r1, r0, r1
- 		cmp r1, r2
+ 		mod r1, r0, r1		 ; Pega o resto da divisão da posição da cobrinha por 40
+ 		cmp r1, r2           ; Verifica se está na coluna 1 da tela (borda do cenário)
+ 		; Se sim, morte!
  		jeq TelaMorte
+ 		; Caso contrário, compara se foi teclado 'a' depois de 'd'
+ 		; Não pode! A cobra não pode estar andando para direita e depois virar direto para esquerda
+ 		; Se isso ocorre, ignora que foi teclado 'a' e mantém o movimento para direita
+ 		load r4, guardaTeclado
+ 		loadn r5, #'d'
+ 		cmp r4, r5
+ 		jeq MoveMinhoca_recalculaPos_D
+ 		; Caso contrário, anda uma casa para esquerda
  		dec r0
- 		loadn r3, #'a'
+ 		loadn r3, #'a'		 ; Armazena 'a' no guardaTeclado
  		store guardaTeclado, r3
  		jmp MoveMinhoca_recalculaPos_Fim
  		
+ 	;Tratamento para movimentar para direita
  	MoveMinhoca_recalculaPos_D:
  		loadn r1, #40
  		loadn r2, #38
- 		mod r1, r0, r1
- 		cmp r1, r2
+ 		mod r1, r0, r1		 ; Pega o resto da divisão da posição da cobrinha por 40
+ 		cmp r1, r2			 ; Verifica se está na coluna 38 da tela (borda do cenário)
+ 		; Se sim, morte!
  		jeq TelaMorte
+ 		; Caso contrário, compara se foi teclado 'd' depois de 'a'
+ 		; Não pode! A cobra não pode estar andando para esquerda e depois virar direto para esquerda
+ 		; Se isso ocorre, ignora que foi teclado 'd' e mantém o movimento para esquerda
+ 		load r4, guardaTeclado
+ 		loadn r5, #'a'
+ 		cmp r4, r5
+ 		jeq MoveMinhoca_recalculaPos_A
+ 		; Caso contrário, anda uma casa para direita
  		inc r0
- 		loadn r3, #'d'
+ 		loadn r3, #'d'		 ; Armazena 'd' no guardaTeclado
  		store guardaTeclado, r3
  		jmp MoveMinhoca_recalculaPos_Fim
- 		
+ 	
+ 	; Tratamento para movimentar para cima
  	MoveMinhoca_recalculaPos_W:
  		loadn r1, #160
- 		cmp r0, r1
- 		jle TelaMorte
+ 		cmp r0, r1			 ; Compara se a cobra está na linha 3 (<160)
+ 		; Se sim, morte!
+ 		jle TelaMorte	
+ 		; Caso contrário, compara se foi teclado 'w' depois de 's'
+ 		; Não pode! A cobra não pode estar andando pra baixo e depois virar direto para cima
+ 		; Se isso ocorre, ignora que foi teclado 'w' e mantém o movimento para baixo 	 
+ 		load r4, guardaTeclado
+ 		loadn r5, #'s'
+ 		cmp r4, r5
+ 		jeq MoveMinhoca_recalculaPos_S
+ 		; Caso contrário, anda uma casa pra cima (-40)
  		loadn r1, #40
  		sub r0, r0, r1
- 		loadn r3, #'w'
+ 		loadn r3, #'w'		 ; Armazena 'w' no guardaTeclado
  		store guardaTeclado, r3
  		jmp MoveMinhoca_recalculaPos_Fim
- 		
+ 	
+ 	; Tratamento para movimentar para baixo
  	MoveMinhoca_recalculaPos_S:
  		loadn r1, #1119
- 		cmp r0, r1
+ 		cmp r0, r1			 ; Compara se a cobra está na linha 29
+ 		; Se sim, morte!
  		jgr TelaMorte
+ 		; Caso contrário, compara se foi teclado 's' depois de 'w'
+ 		; Não pode! A cobra não pode estar andando para cima e depois virar direto para baixo
+ 		; Se isso ocorre, ignora que foi teclado 's' e mantém o movimento para cima
+ 		load r4, guardaTeclado
+ 		loadn r5, #'w'
+ 		cmp r4, r5
+ 		jeq MoveMinhoca_recalculaPos_W
+ 		; Caso contrário, anda uma casa para baixo (+40)
  		loadn r1, #40
  		add r0, r0, r1
- 		loadn r3, #'s'
+ 		loadn r3, #'s'		 ; Armazena 's' no guardaTeclado
  		store guardaTeclado, r3
  		jmp MoveMinhoca_recalculaPos_Fim
- 
-ApagaTela:
+
+; Função que aumenta a cobrinha quando come uma frutinha
+Incrementa_Minhoca:
 	push r0
 	push r1
+	push r2
+	;Se a cobrinha come a comida, imprime outra
+	call Imprime_Comida      
+	; Carregamos a posição da cauda
+	load r0, posCaudaMinhoca
+	; Carregamos também o tamanho da cobrinha
+	load r2, tamanho
+	; E o endereço do vetor de posições
+	loadn r1, #corpoMinhoca
+	inc r2			         ; Incrementa o tamanho
+	add r1, r1, r2			 ; Pegamos a primeira posição do vetor e somamos com o tamanho (ultima posição)
+	storei r1, r0			 ; Armazenamos a posição da cauda no ultima posição do vetor
 	
-	loadn r0, #1200		; apaga as 1200 posicoes da Tela
-	loadn r1, #' '		; com "espaco"
+	store tamanho, r2		 ; Armazena o tamanho da cobra
+	loadn r0, #36			 ; Imprime o score na posição 36 da tela
+	call MostraScore
 	
-	   ApagaTela_Loop:	;;label for(r0=1200;r3>0;r3--)
-		dec r0
-		outchar r1, r0
+	pop r2					 ; Restaura os valores dos registradores
+	pop r1
+	pop r0
+	jmp MoveMinhoca_Skip
+
+; Função de apagar a tela
+ApagaTela:
+	push r0					 ; Preserva os valores dos registradores
+	push r1
+	
+	loadn r0, #1200			 ; Carrega 1200, que será usado para o loop de apagar as 1200 posições da tela
+	loadn r1, #' '		     ; O "apagar" é imprimir espaço
+	
+	   ApagaTela_Loop:		 ; Fazemos um for para as 1200 posições da tela
+		dec r0				 ; i--
+		outchar r1, r0		 ; Imprime espaço
 		jnz ApagaTela_Loop
  
-	pop r1
+	pop r1					 ; Restaura os registradores
 	pop r0
 	rts	
 	
-ImprimeTela: 	;  rotina de Impresao de Cenario na Tela Inteira
-		;  r1 = endereco onde comeca a primeira linha do Cenario
-		;  r2 = cor do Cenario para ser impresso
-
-	push r0	; protege o r3 na pilha para ser usado na subrotina
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
-	push r3	; protege o r3 na pilha para ser usado na subrotina
-	push r4	; protege o r4 na pilha para ser usado na subrotina
-	push r5	; protege o r4 na pilha para ser usado na subrotina
-
-	loadn r0, #0  	; posicao inicial tem que ser o comeco da tela!
-	loadn r3, #40  	; Incremento da posicao da tela!
-	loadn r4, #41  	; incremento do ponteiro das linhas da tela
-	loadn r5, #1200 ; Limite da tela!
+;  Rotina de Impresao de Cenario na Tela Inteira
+ImprimeTela:
+	push r0					 ; Protege o registrador na pilha para ser usado na subrotina
+	;  r1 = endereco onde comeca a primeira linha do Cenario
+	;  r2 = cor do Cenario para ser impresso
+	push r3					
+	push r4
+	push r5	
+	
+	loadn r0, #0  			 ; Posicao inicial tem que ser o comeco da tela!
+	loadn r3, #40			 ; Passa para próxima linha
+	loadn r4, #41			 ; incremento do ponteiro 
+	loadn r5, #1200			 ; Limite da tela
 	
    ImprimeTela_Loop:
-		call ImprimeStr
-		add r0, r0, r3  	; incrementaposicao para a segunda linha na tela -->  r0 = r0 + 40
-		add r1, r1, r4  	; incrementa o ponteiro para o comeco da proxima linha na memoria (40 + 1 porcausa do /0 !!) --> r1 = r1 + 41
-		cmp r0, r5			; Compara r0 com 1200
-		jne ImprimeTela_Loop	; Enquanto r0 < 1200
-	
-	pop r5	; resgata os valores dos registradores utilizados na Subrotina da Pilha
+		call ImprimeStr		 ; Chama a função imprimeStr para imprimir cada pixel
+		add r0, r0, r3  	 ; incrementa posicao para a segunda linha na tela -->  r0 = r0 + 40
+		add r1, r1, r4  	 ; incrementa o ponteiro para o comeco da proxima linha na memoria
+		cmp r0, r5			 ; Verifica se acabou a tela
+		jne ImprimeTela_Loop
+	; Restaura os valroes dos registradores
+	pop r5	
 	pop r4
 	pop r3
-	pop r2
-	pop r1
 	pop r0
 	rts
+
+;  Rotina de impresao de mensagens
+ImprimeStr:  
+	; r0 = Posicao da tela que o primeiro caractere da mensagem sera' impresso
+	; r1 = endereco onde comeca a mensagem; 
+	; r2 = cor da mensagem
+	; A mensagem será impressa até encontrar \0
+	push r0	; Protege o registrador na pilha para preservar seu valor
+	push r1
+	push r2	
+	push r3	
+	push r4	
 	
-ImprimeStr:	;  rotina de Impresao de Mensagens:    r0 = Posicao da tela que o primeiro caractere da mensagem sera' impresso;  r1 = endereco onde comeca a mensagem; r2 = cor da mensagem.   Obs: a mensagem sera' impressa ate' encontrar "/0"
-	push r0	; protege o r0 na pilha para preservar seu valor
-	push r1	; protege o r1 na pilha para preservar seu valor
-	push r2	; protege o r1 na pilha para preservar seu valor
-	push r3	; protege o r3 na pilha para ser usado na subrotina
-	push r4	; protege o r4 na pilha para ser usado na subrotina
-	
-	loadn r3, #'\0'	; Criterio de parada
+	loadn r3, #'\0'			 ; Criterio de parada
 	
    ImprimeStr_Loop:	
-		loadi r4, r1
-		cmp r4, r3		; If (Char == \0)  vai Embora
+		loadi r4, r1		 ; Obtem o primeiro caractere
+		cmp r4, r3		     ; Verifica critério de parada
 		jeq ImprimeStr_Sai
-		add r4, r2, r4	; Soma a Cor
-		outchar r4, r0	; Imprime o caractere na tela
-		inc r0			; Incrementa a posicao na tela
-		inc r1			; Incrementa o ponteiro da String
+		add r4, r2, r4		 ; Soma a Cor
+		outchar r4, r0		 ; Imprime o caractere na tela
+		inc r0				 ; Incrementa a posicao na tela
+		inc r1				 ; Incrementa o ponteiro da String
 		jmp ImprimeStr_Loop
 	
    ImprimeStr_Sai:	
-	pop r4	; resgata os valores dos registradores utilizados na Subrotina da Pilha
+	pop r4					 ; Restaura os valores dos registradores utilizados na Subrotina da Pilha
 	pop r3
 	pop r2
 	pop r1
 	pop r0
 	rts
-	
+
+; Rotina de impressão da frutinha
 Imprime_Comida:
-	push r0
+	push r0 				 ; Protege os registradores na pilha
 	push r1
 	push r2
 	push r3
 
-	loadn r1, #'@'
-	loadn r2, #comida
-	load r3, iComida
-	add r0, r2, r3
-	loadi r2, r0
-	outchar r1, r2
+	loadn r1, #2368			 ; Caractere @ vermelho
+	loadn r2, #comida		 ; Endereço do primeiro vetor de posição da frutinha
+	load r3, iComida		 ; Incremento para caminhar pela string
+	add r0, r2, r3           ; Posição x da string
+	loadi r2, r0			 ; Carrega a posição da frutinha na tela
+	outchar r1, r2		 	 ; Imprime a frutinha na posição dada
 	
-
-	inc r3
+	inc r3					 ; Depois de impresso, passa para a próxima frutinha do vetor
 	store iComida, r3
 	store posComida, r2
 	
-	pop r3
+	pop r3					 ; Restaura os valores do registrador
 	pop r2
 	pop r1
 	pop r0
 	rts
-
+	
+; Rotina de delay, vai definir a velocidade da cobrinha
 Delay:
-						;Utiliza Push e Pop para nao afetar os ristradores do programa principal
-	push r0
+	push r0					 ; Preserva os registradores
 	push r1
 	
-	loadn r1, #200  ; a
-   Delay_volta2:				;Quebrou o contador acima em duas partes (dois loops de decremento)
-	loadn r0, #3000	; b
-   Delay_volta: 
-	dec r0					; (4*a + 6)b = 1000000  == 1 seg  em um clock de 1MHz
-	jnz Delay_volta	
-	dec r1
-	jnz Delay_volta2
+	loadn r1, #400			 ; Define o primeiro valor para o loop
+   	Delay_volta2:		
+		loadn r0, #3000	 	 ; Define o segundo valor para o loop
+   	Delay_volta: 
+   	; No delay_volta, a cada ciclo de maquina decrementa de 3000 até 0
+   	; Quando atinge 0, decrementa de R1 e recarrega R0 com 3000
+   	; O delay finaliza quando ambos os registradores atingem 0
+   	; O tempo de delay é dado de acordo com os valores dos registradores e o tempo do ciclo de maquina
+		dec r0			
+		jnz Delay_volta	
+		dec r1
+		jnz Delay_volta2
 	
-	pop r1
-	pop r0
-	
-	rts	
-	
+		pop r1				 ; Restaura os valores dos registradores
+		pop r0
+		rts	
+
+; Cenário do jogo
 tela0Linha0  : string "                           SCORE:       "
 tela0Linha1  : string "________________________________________"
 tela0Linha2  : string "****************************************"
@@ -495,7 +535,8 @@ tela0Linha27 : string "*                                      *"
 tela0Linha28 : string "*                                      *"
 tela0Linha29 : string "****************************************"
 
-tela1Linha0  : string "                           SCORE:       "
+; Tela de inicio do jogo
+tela1Linha0  : string "                                        "
 tela1Linha1  : string "________________________________________"
 tela1Linha2  : string "****************************************"
 tela1Linha3  : string "*                                      *"
@@ -526,7 +567,8 @@ tela1Linha27 : string "*                                      *"
 tela1Linha28 : string "*                                      *"
 tela1Linha29 : string "****************************************"
 
-tela2Linha0  : string "                           SCORE:       "
+; Tela de morte
+tela2Linha0  : string "                                        "
 tela2Linha1  : string "________________________________________"
 tela2Linha2  : string "****************************************"
 tela2Linha3  : string "*                                      *"
@@ -535,11 +577,11 @@ tela2Linha5  : string "*                                      *"
 tela2Linha6  : string "*                                      *"
 tela2Linha7  : string "*                                      *"
 tela2Linha8  : string "*                                      *"
-tela2Linha9  : string "*                GAME OVER             *"
+tela2Linha9  : string "*               GAME OVER              *"
 tela2Linha10 : string "*                                      *"
 tela2Linha11 : string "*               SCORE:                 *"
-tela2Linha12 : string "*       DIGITE ENTER PARA COMECAR      *"
-tela2Linha13 : string "*                                      *"
+tela2Linha12 : string "*                                      *"
+tela2Linha13 : string "*       DIGITE ENTER PARA COMECAR      *"
 tela2Linha14 : string "*                                      *"
 tela2Linha15 : string "*                                      *"
 tela2Linha16 : string "*                                      *"
@@ -557,6 +599,8 @@ tela2Linha27 : string "*                                      *"
 tela2Linha28 : string "*                                      *"
 tela2Linha29 : string "****************************************"
 
+; Vetor de posição da frutinha
+; Pseudo-aleatória
 comida : var #1200
 static comida + #0, #536
 static comida + #1, #1097
