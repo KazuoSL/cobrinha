@@ -1,6 +1,6 @@
 # Snake Game
 Apresentamos nosso joguinho, o famoso jogo da cobrinha (Snake Game)! É um jogo simples mas que marcou toda uma geração.
-# Parcipantes:
+## Parcipantes:
 Gabriel Garcia Ferreira 13677160 
 
 Johnatas Luiz dos Santos 13676388
