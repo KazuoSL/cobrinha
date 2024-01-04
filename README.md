@@ -24,4 +24,4 @@ Divirta-se!
 
 ## Vídeo apresentando o jogo
 
-Lucas Kazuo Ito de Araujo: https://drive.google.com/file/d/10mCxpNH1VuGAbXPt3tiiJSBa4qcZFucL/view?usp=sharing
+Lucas Kazuo Ito de Araujo: https://drive.google.com/file/d/1Lsp-lrbH-il3hyLO5oVQKp4Sp7rwvOb9/view?usp=sharing
